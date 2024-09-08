@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useFormik } from 'formik';
 import axios from 'axios';
 
@@ -21,42 +21,22 @@ function App() {
     },
     validate: (values) => {
       const errors = {};
-
-      if (!values.title) {
-        errors.title = 'Title is required';
-      }
-      if (!values.author.name) {
-        errors.author = errors.author || {};
-        errors.author.name = 'Author Name is required';
-      }
-      if (!values.author.birthdate) {
-        errors.author = errors.author || {};
-        errors.author.birthdate = 'Author Birthdate is required';
-      }
-      if (!values.author.bio) {
-        errors.author = errors.author || {};
-        errors.author.bio = 'Author Bio is required';
-      }
-      if (!values.isbnNumber) {
-        errors.isbnNumber = 'ISBN Number is required';
-      }
-      if (!values.publicationDate) {
-        errors.publicationDate = 'Publication Date is required';
-      }
+      if (!values.title) errors.title = 'Title is required';
+      if (!values.author.name) errors.author = { ...errors.author, name: 'Author Name is required' };
+      if (!values.author.birthdate) errors.author = { ...errors.author, birthdate: 'Author Birthdate is required' };
+      if (!values.author.bio) errors.author = { ...errors.author, bio: 'Author Bio is required' };
+      if (!values.isbnNumber) errors.isbnNumber = 'ISBN Number is required';
+      if (!values.publicationDate) errors.publicationDate = 'Publication Date is required';
       return errors;
     },
     onSubmit: async (values, { resetForm }) => {
-      try {
-        if (editingBook) {
-          await updateBook(editingBook.id, values);
-        } else {
-          await addBook(values);
-        }
-        resetForm();
-        setEditingBook(null);
-      } catch (error) {
-        console.error('Error submitting form:', error);
+      if (editingBook) {
+        await updateBook(editingBook.id, values);
+      } else {
+        await addBook(values);
       }
+      resetForm();
+      setEditingBook(null);
     },
   });
 
@@ -81,23 +61,19 @@ function App() {
     );
   };
 
-  const startEditingBook = useCallback(
-    (book) => {
-      setEditingBook(book);
-      formik.setValues(book);
-    },
-    [formik]
-  );
-
   const deleteBook = async (id) => {
     await axios.delete(`${apiURL}/${id}`);
     setBookList((prevList) => prevList.filter((book) => book.id !== id));
   };
 
+  const startEditingBook = (book) => {
+    setEditingBook(book);
+    formik.setValues(book);
+  };
+
   const handleNestedChange = (event) => {
     const { name, value } = event.target;
-    const [parent, child] = name.split('.');
-    formik.setFieldValue(`${parent}.${child}`, value);
+    formik.setFieldValue(name, value);
   };
 
   return (
@@ -114,7 +90,7 @@ function App() {
             value={formik.values.title}
             onChange={formik.handleChange}
           />
-          {formik.errors.title ? <div className="error">{formik.errors.title}</div> : null}
+          {formik.errors.title && <div className="error">{formik.errors.title}</div>}
         </label>
 
         <label>
@@ -126,7 +102,7 @@ function App() {
             value={formik.values.author.name}
             onChange={handleNestedChange}
           />
-          {formik.errors.author?.name ? <div className="error">{formik.errors.author.name}</div> : null}
+          {formik.errors.author?.name && <div className="error">{formik.errors.author.name}</div>}
         </label>
 
         <label>
@@ -138,7 +114,7 @@ function App() {
             value={formik.values.author.birthdate}
             onChange={handleNestedChange}
           />
-          {formik.errors.author?.birthdate ? <div className="error">{formik.errors.author.birthdate}</div> : null}
+          {formik.errors.author?.birthdate && <div className="error">{formik.errors.author.birthdate}</div>}
         </label>
 
         <label>
@@ -150,7 +126,7 @@ function App() {
             value={formik.values.author.bio}
             onChange={handleNestedChange}
           />
-          {formik.errors.author?.bio ? <div className="error">{formik.errors.author.bio}</div> : null}
+          {formik.errors.author?.bio && <div className="error">{formik.errors.author.bio}</div>}
         </label>
 
         <label>
@@ -162,7 +138,7 @@ function App() {
             value={formik.values.isbnNumber}
             onChange={formik.handleChange}
           />
-          {formik.errors.isbnNumber ? <div className="error">{formik.errors.isbnNumber}</div> : null}
+          {formik.errors.isbnNumber && <div className="error">{formik.errors.isbnNumber}</div>}
         </label>
 
         <label>
@@ -174,7 +150,7 @@ function App() {
             value={formik.values.publicationDate}
             onChange={formik.handleChange}
           />
-          {formik.errors.publicationDate? <div className="error">{formik.errors.publicationDate}</div> : null}
+          {formik.errors.publicationDate && <div className="error">{formik.errors.publicationDate}</div>}
         </label>
 
         <button type="submit">
